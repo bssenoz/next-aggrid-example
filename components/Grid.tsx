@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-balham.css';
+// import 'ag-grid-community/styles/ag-grid.css';
+// import 'ag-grid-community/styles/ag-theme-balham.css';
 import {
   GridReadyEvent,
   GridApi,
@@ -12,6 +12,7 @@ import {
 } from 'ag-grid-community';
 import { fetchData, Athlete } from '../data/api';
 import { FaMedal, FaTrash, FaFileCsv } from 'react-icons/fa';
+import { themeQuartz, colorSchemeDark, iconSetMaterial } from 'ag-grid-community';;
 
 const columnDefs: ColDef[] = [
   {
@@ -20,10 +21,10 @@ const columnDefs: ColDef[] = [
     headerCheckboxSelection: true,
     width: 50,
   },
-  { headerName: 'ID',      field: 'id',      width: 70,  sortable: true },
+  { headerName: 'ID',      field: 'id',      width: 80,  sortable: true },
   { headerName: 'Athlete', field: 'athlete', width: 150, editable: true, sortable: true, filter: true },
   { headerName: 'Age',     field: 'age',     width: 90,  minWidth: 50, maxWidth: 100, editable: true, sortable: true, filter: true },
-  { headerName: 'Country', field: 'country', width: 120, sortable: true, filter: true },
+  { headerName: 'Country', field: 'country', width: 120, sortable: true, filter: true, type: 'rightAligned' },
   { headerName: 'Year',    field: 'year',    width: 90,  sortable: true, filter: true },
   { headerName: 'Date',    field: 'date',    width: 110, sortable: true, filter: true },
   { headerName: 'Sport',   field: 'sport',   width: 110, sortable: true, filter: true },
@@ -58,6 +59,8 @@ type AgGridApi = {
   column?: Column;
 };
 
+
+    
 export default function Grid() {
   const [rowData, setRowData] = React.useState<Athlete[]>([]);
   const apiRef = React.useRef<AgGridApi>({});
@@ -68,6 +71,16 @@ export default function Grid() {
   React.useEffect(() => {
     fetchData().then(setRowData);
   }, []);
+
+  const myTheme = themeQuartz.withParams({
+    backgroundColor: '#f9fafb',                // grid arka planı 
+    foregroundColor: '#374151',                // yazı rengi
+    headerTextColor: '#ffffff',                // başlık yazısı
+    headerBackgroundColor: '#7398eb',          // başlık arka planı
+    oddRowBackgroundColor: '#f3f4f6',           // zebra efekti için
+    headerColumnResizeHandleColor: '#93c5fd',  // resize çizgisi
+  });
+  
 
   const onGridReady = (params: GridReadyEvent) => {
     gridApi.current = params.api;
@@ -121,7 +134,8 @@ export default function Grid() {
 
     {/* AG Grid Table */}
     <div className="ag-theme-balham flex-1 w-full">
-      <AgGridReact
+      <AgGridReact 
+        theme={myTheme}
         rowSelection="multiple"
         suppressRowClickSelection={true}
         columnDefs={columnDefs}
