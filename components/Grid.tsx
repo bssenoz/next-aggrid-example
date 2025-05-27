@@ -11,20 +11,47 @@ import {
   ColDef,
 } from 'ag-grid-community';
 import { fetchData, Athlete } from '../data/api';
+import { FaMedal, FaTrash, FaFileCsv } from 'react-icons/fa';
 
 const columnDefs: ColDef[] = [
-    { headerName: "ID",      field: "id",      width: 70 },
-    { headerName: "Athlete", field: "athlete", width: 150, editable: true },
-    { headerName: "Age",     field: "age",     width: 90,  minWidth: 50, maxWidth: 100, editable: true },
-    { headerName: "Country", field: "country", width: 120 },
-    { headerName: "Year",    field: "year",    width: 90 },
-    { headerName: "Date",    field: "date",    width: 110 },
-    { headerName: "Sport",   field: "sport",   width: 110 },
-    { headerName: "Gold",    field: "gold",    width: 100 },
-    { headerName: "Silver",  field: "silver",  width: 100 },
-    { headerName: "Bronze",  field: "bronze",  width: 100 },
-    { headerName: "Total",   field: "total",   width: 100 },
-  ];
+  {
+    headerName: '',
+    checkboxSelection: true,
+    headerCheckboxSelection: true,
+    width: 50,
+  },
+  { headerName: 'ID',      field: 'id',      width: 70,  sortable: true },
+  { headerName: 'Athlete', field: 'athlete', width: 150, editable: true, sortable: true, filter: true },
+  { headerName: 'Age',     field: 'age',     width: 90,  minWidth: 50, maxWidth: 100, editable: true, sortable: true, filter: true },
+  { headerName: 'Country', field: 'country', width: 120, sortable: true, filter: true },
+  { headerName: 'Year',    field: 'year',    width: 90,  sortable: true, filter: true },
+  { headerName: 'Date',    field: 'date',    width: 110, sortable: true, filter: true },
+  { headerName: 'Sport',   field: 'sport',   width: 110, sortable: true, filter: true },
+  {
+    headerName: 'Gold',
+    field: 'gold',
+    width: 100,
+    sortable: true,
+    filter: true,
+    cellClassRules: {
+      'bg-yellow-100 text-yellow-800': 'x > 2',
+    },
+  },
+  { headerName: 'Silver',  field: 'silver',  width: 100, sortable: true, filter: true },
+  { headerName: 'Bronze',  field: 'bronze',  width: 100, sortable: true, filter: true },
+  {
+    headerName: 'Total',
+    field: 'total',
+    width: 100,
+    sortable: true,
+    filter: true,
+    cellRenderer: (params: { value: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; }) => (
+      <span className="flex items-center gap-1 justify-center">
+        <FaMedal className="text-blue-500" /> {params.value}
+      </span>
+    ),
+  },
+];
 
 type AgGridApi = {
   grid?: GridApi;
@@ -34,27 +61,85 @@ type AgGridApi = {
 export default function Grid() {
   const [rowData, setRowData] = React.useState<Athlete[]>([]);
   const apiRef = React.useRef<AgGridApi>({});
-
+  const [selectedCount, setSelectedCount] = React.useState(0);
+  const gridApi = React.useRef<GridApi | null>(null);
+  const columnApi = React.useRef<Column | null>(null);
+  
   React.useEffect(() => {
     fetchData().then(setRowData);
   }, []);
 
   const onGridReady = (params: GridReadyEvent) => {
-    // runtime’da params.columnApi var, TS’e “buna güven” demek için `as any`
-    apiRef.current.grid   = params.api;
-    apiRef.current.column = (params as any).columnApi as Column;
+    gridApi.current = params.api;
+    columnApi.current = (params as any).columnApi;
+  
+    apiRef.current.grid = params.api;
+    apiRef.current.column = (params as any).columnApi;
   };
 
-  return (
-    <div className="ag-theme-balham" style={{ height: '100vh', width: '100%', margin: 'auto' }}>
+  const onSelectionChanged = () => {
+    setSelectedCount(gridApi.current?.getSelectedRows().length || 0);
+  };
+
+  const deleteSelected = () => {
+    const selected = gridApi.current?.getSelectedRows() || [];
+    if (!selected.length) return alert('Lütfen önce satır seçin.');
+    const ids = new Set(selected.map((r: Athlete) => r.id));
+    setRowData((old) => old.filter((r) => !ids.has(r.id)));
+    gridApi.current?.deselectAll();
+    setSelectedCount(0);
+  };
+
+  const exportSelectedCsv = () => {
+    const selectedNodes = gridApi.current?.getSelectedNodes();
+    if (!selectedNodes?.length) return alert('Lütfen önce satır seçin.');
+    gridApi.current!.exportDataAsCsv({
+      fileName: 'secili_sporcular.csv',
+      onlySelected: true,
+    });
+  };
+
+  return ( 
+  
+  <div className="h-screen w-full flex flex-col bg-gray-50">
+      
+    <div className="flex gap-3 p-4 border-b bg-white shadow-sm items-center">
+      <button
+        onClick={deleteSelected}
+        className="flex items-center gap-2 px-4 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition"
+      >
+        <FaTrash /> Sil
+      </button>
+      <button
+        onClick={exportSelectedCsv}
+        className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-500 text-white rounded-md hover:bg-emerald-600 transition"
+      >
+        <FaFileCsv /> CSV İndir
+      </button>
+      <span className="ml-auto text-sm text-gray-500">{selectedCount} satır seçili</span>
+    </div>
+
+    {/* AG Grid Table */}
+    <div className="ag-theme-balham flex-1 w-full">
       <AgGridReact
         rowSelection="multiple"
-        suppressRowClickSelection
+        suppressRowClickSelection={true}
         columnDefs={columnDefs}
         onGridReady={onGridReady}
+        onSelectionChanged={onSelectionChanged}
         rowData={rowData}
-        defaultColDef={{ resizable: true, sortable: true, filter: true }}
+        animateRows={true}
+        pagination={true}
+        paginationPageSize={20}
+        defaultColDef={{
+          resizable: true,
+          sortable: true,
+          filter: true,
+          floatingFilter: true,
+        }}
       />
     </div>
+  </div>
+
   );
 }
