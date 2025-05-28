@@ -11,13 +11,14 @@
   "dependencies": {
     "ag-charts-community": "^11.2.3",
     "ag-charts-react": "^11.2.3",
-    "ag-grid-community": "^32.3.6",
-    "ag-grid-enterprise": "~32.3.6",
-    "ag-grid-react": "~32.3.6",
+    "ag-grid-community": "^33.3.0",
+    "ag-grid-enterprise": "~33.3.0",
+    "ag-grid-react": "~33.3.0",
     "next": "15.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-icons": "^5.5.0"
+    "react-icons": "^5.5.0",
+    "zustand": "^5.0.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
