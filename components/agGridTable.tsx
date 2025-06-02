@@ -174,6 +174,12 @@ export default function Grid() {
   const onGridReady = (params: GridReadyEvent) => {
     gridApi.current = params.api;
     columnApi.current = (params as any).columnApi;
+    if (gridRef.current) {
+      gridRef.current.api.setGridOption("rowSelection", {
+        mode: "multiRow",
+        groupSelects: "descendants",
+      });
+    }
   };
 
   const onSelectionChanged = () => {
@@ -184,7 +190,7 @@ export default function Grid() {
 
   const deleteSelected = () => {
     const selected = gridApi.current?.getSelectedRows() || [];
-    if (!selected.length) return alert('Lütfen önce satır seçin.');
+    if (!selected || selected.length == 0) return alert('Lütfen önce satır seçin.');
     const ids = new Set(selected.map((r: Athlete) => r.id));
     setRowData((old) => old.filter((r) => !ids.has(r.id)));
     gridApi.current?.deselectAll();
